@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Receipt, CheckCircle } from 'lucide-react';
+import { ChevronLeft, Receipt, CheckCircle, Plus, Minus } from 'lucide-react';
 import './Checkout.css';
 
 const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
@@ -11,21 +11,52 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
 
   const totalAmount = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  const handleRemarkChange = (id, isNoSide, value) => {
-    const item = orderItems.find(i => i.id === id && i.isNoSide === isNoSide);
-    if (item) {
-      onUpdateItem({ ...item, remark: value });
+  // 定義客製化選項群組
+  const optionGroups = [
+    { id: 'spicy', name: '辣度', options: ['大辣', '中辣', '小辣', '不辣'] },
+    { id: 'scallion', name: '青蔥', options: ['蔥多', '蔥少'] },
+    { id: 'rice', name: '飯量', options: ['飯多', '飯少'] }
+  ];
+
+  const handleToggleOption = (item, groupId, optionLabel) => {
+    const currentOptions = item.selectedOptions || {};
+    const newOptions = { ...currentOptions };
+
+    // 如果點擊的是原本已經選的，就取消選取 (切換)
+    if (newOptions[groupId] === optionLabel) {
+      delete newOptions[groupId];
+    } else {
+      newOptions[groupId] = optionLabel;
     }
+
+    // 重新組合字串，放入 remark 提供給後台
+    const remarkString = Object.values(newOptions).join(', ');
+
+    onUpdateItem({
+      ...item,
+      selectedOptions: newOptions,
+      remark: remarkString
+    });
+  };
+
+  const handleQtyChange = (item, newQuantity) => {
+    onUpdateItem({
+      ...item,
+      quantity: newQuantity
+    });
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setErrorMsg('');
     try {
-      const response = await fetch('http://localhost:3001/api/orders', {
+      const apiUrl = 'https://script.google.com/macros/s/AKfycbw0PRd07CmA2X83VS9fsUp75wnVC2t9IjDICi_s3kSskE_99WDqzqLcsjDRsbidpYBBLw/exec';
+      
+      await fetch(apiUrl, {
         method: 'POST',
+        mode: 'no-cors',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify({
           name: userName,
@@ -34,34 +65,21 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
         }),
       });
 
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          onClearOrder();
-          navigate('/');
-        }, 3000);
-      } else {
-        throw new Error(data.message || '送出失敗');
-      }
+      // 使用 no-cors 會收到 opaque response，無法讀取詳細內容，
+      // 只要沒有拋出 catch 錯誤，我們就視為成功。
+      navigate('/success', { state: { orderItems } });
     } catch (err) {
       console.error(err);
-      setErrorMsg('無法連接伺服器，請確認伺服器已啟動。' + err.message);
+      setErrorMsg('傳送失敗，請確認 API 網址設定正確或網路連線。' + err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isSuccess) {
-    return (
-      <div className="checkout-container success-view page-enter-active">
-        <CheckCircle size={80} color="var(--primary-color)" className="success-icon" />
-        <h2>訂單送出成功！</h2>
-        <p>我們會盡快為您準備餐點 😊</p>
-        <p className="redirect-hint">3秒後自動返回首頁...</p>
-      </div>
-    );
+  // 若沒餐點了(都被減為0)，自動回菜單
+  if (orderItems.length === 0) {
+    setTimeout(() => navigate('/menu'), 0);
+    return null;
   }
 
   return (
@@ -84,28 +102,66 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
             <Receipt size={20} />
             <h2>訂單明細</h2>
           </div>
+          <p className="section-subtitle">※無須調整為正常(加蔥、小辣)</p>
           
           <div className="order-items">
-            {orderItems.map((item, idx) => (
-              <div key={`${item.id}-${item.isNoSide}`} className="order-item-card">
-                <div className="item-main-info">
-                  <div className="item-name-qty">
-                    <span className="qty">{item.quantity}x</span>
-                    <span className="name">{item.displayName}</span>
+            {orderItems.map((item) => {
+              // 某些餐點可能不適合顯示特定選項 (例如果汁/湯不顯示飯量)
+              // 這裡採用簡單判定：只要不是熱湯跟果醋，就可以顯示選項。
+              // 透過 item.id 判斷，sp: 湯, d: 果醋
+              const showOptions = !(item.id.startsWith('sp') || item.id.startsWith('d'));
+              
+              return (
+                <div key={`${item.id}-${item.isNoSide}`} className="order-item-card">
+                  
+                  {/* 上半部：餐點名稱與數量控制 */}
+                  <div className="item-main-header">
+                    <div className="item-title-area">
+                      <span className="name">{item.displayName}</span>
+                      <span className="item-price">${item.price * item.quantity}</span>
+                    </div>
+                    
+                    <div className="checkout-qty-control">
+                      <button 
+                        className="qty-btn small-btn remove" 
+                        onClick={() => handleQtyChange(item, item.quantity - 1)}
+                      ><Minus size={14} /></button>
+                      <span className="qty-count">{item.quantity}</span>
+                      <button 
+                        className="qty-btn small-btn add" 
+                        onClick={() => handleQtyChange(item, item.quantity + 1)}
+                      ><Plus size={14} /></button>
+                    </div>
                   </div>
-                  <span className="item-price">${item.price * item.quantity}</span>
+                  
+                  {/* 下半部：客製化標籤 (僅主餐/單點顯示) */}
+                  {showOptions && (
+                    <div className="item-options-area">
+                      {optionGroups.map((group) => (
+                        <div key={group.id} className="option-group">
+                          <span className="option-label-small">{group.name}</span>
+                          <div className="option-chips">
+                            {group.options.map(opt => {
+                              const isSelected = (item.selectedOptions && item.selectedOptions[group.id] === opt);
+                              return (
+                                <button
+                                  key={opt}
+                                  className={`option-chip ${isSelected ? 'active' : ''}`}
+                                  onClick={() => handleToggleOption(item, group.id, opt)}
+                                >
+                                  {opt}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                 </div>
-                
-                <div className="item-remark">
-                  <input 
-                    type="text" 
-                    placeholder="備註 (如：飯少、小辣等)" 
-                    value={item.remark || ''}
-                    onChange={(e) => handleRemarkChange(item.id, item.isNoSide, e.target.value)}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="order-total-card">
@@ -128,7 +184,7 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
         <button 
           className="btn-primary submit-btn" 
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || orderItems.length === 0}
         >
           {isSubmitting ? '送出中...' : `確認送出 $${totalAmount}`}
         </button>

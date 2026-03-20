@@ -24,8 +24,7 @@ const Home = ({ userName, setUserName }) => {
         <div className="brand-logo">
           <Utensils size={48} className="logo-icon" />
         </div>
-        <h1 className="brand-title">雞肉本家</h1>
-        <p className="brand-subtitle">線上點餐系統</p>
+        <h1 className="brand-title">線上點餐系統</h1>
         
         <form onSubmit={handleStart} className="name-form">
           <div className="input-group">
@@ -48,10 +47,6 @@ const Home = ({ userName, setUserName }) => {
         </form>
       </div>
 
-      <div className="home-footer">
-        <p>台中市北屯區昌平路一段318號</p>
-        <p>營業時間 11:00 - 20:30</p>
-      </div>
     </div>
   );
 };

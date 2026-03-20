@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Menu from './pages/Menu';
 import Checkout from './pages/Checkout';
+import Success from './pages/Success';
+import Orders from './pages/Orders';
+import Admin from './pages/Admin';
 
 function App() {
   const [userName, setUserName] = useState('');
@@ -68,6 +71,9 @@ function App() {
               )
             } 
           />
+          <Route path="/success" element={<Success onClearOrder={clearOrder} />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </div>
     </Router>
