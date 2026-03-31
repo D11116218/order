@@ -6,7 +6,7 @@ import './Checkout.css';
 
 const customizationGroups = [
   { id: 'spicy', label: '辣度', options: ['大辣', '中辣', '小辣'] },
-  { id: 'onions', label: '蔥',   options: ['蔥多', '加蔥'] },
+  { id: 'onions', label: '蔥',   options: ['蔥多', '加蔥', '不加蔥'] },
   { id: 'rice',  label: '飯量',  options: ['飯多+15', '飯少'] }
 ];
 
