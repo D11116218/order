@@ -7,7 +7,6 @@ import './Checkout.css';
 const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const totalAmount = getOrderTotal(orderItems);
@@ -30,7 +29,7 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
         const unitPriceWithExtra = itemTotal / item.quantity;
         return {
           ...item,
-          price: unitPriceWithExtra, // Update unit price to include extras
+          price: unitPriceWithExtra,
           total: itemTotal
         };
       });
@@ -38,9 +37,7 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
       await fetch(apiUrl, {
         method: 'POST',
         mode: 'no-cors',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
-        },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           name: userName,
           items: formattedItems,
@@ -48,18 +45,15 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
         }),
       });
 
-      // 使用 no-cors 會收到 opaque response，無法讀取詳細內容，
-      // 只要沒有拋出 catch 錯誤，我們就視為成功。
       navigate('/success', { state: { orderItems: formattedItems } });
     } catch (err) {
       console.error(err);
-      setErrorMsg('傳送失敗，請確認 API 網址設定正確或網路連線。' + err.message);
+      setErrorMsg('傳送失敗，請確認 API 網址設定正確或網絡連線。' + err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 若沒餐點了(都被減為0)，自動回菜單
   if (orderItems.length === 0) {
     setTimeout(() => navigate('/menu'), 0);
     return null;
@@ -69,10 +63,7 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
     <div className="bg-[#f8f9fa] min-h-screen pb-40 font-body">
       {/* Header */}
       <header className="w-full top-0 sticky z-50 bg-white border-b border-gray-100 flex items-center px-6 h-16 shadow-sm">
-        <button 
-          onClick={() => navigate('/menu')}
-          className="p-2 -ml-2 text-gray-800 active:scale-90 transition-transform"
-        >
+        <button onClick={() => navigate('/menu')} className="p-2 -ml-2 text-gray-800 active:scale-90 transition-transform">
           <span className="material-symbols-outlined font-bold">chevron_left</span>
         </button>
         <h1 className="flex-1 text-center pr-8 text-[19px] font-bold text-[#1a1a1a] font-headline">確認訂單</h1>
