@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Receipt, CheckCircle, Plus, Minus } from 'lucide-react';
+import { getItemTotalPrice, getOrderTotal } from '../utils/price';
 import './Checkout.css';
 
 const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
@@ -9,35 +10,7 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const totalAmount = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-  // 定義客製化選項群組
-  const optionGroups = [
-    { id: 'spicy', name: '辣度', options: ['大辣', '中辣', '小辣', '不辣'] },
-    { id: 'scallion', name: '青蔥', options: ['蔥多', '蔥少'] },
-    { id: 'rice', name: '飯量', options: ['飯多', '飯少'] }
-  ];
-
-  const handleToggleOption = (item, groupId, optionLabel) => {
-    const currentOptions = item.selectedOptions || {};
-    const newOptions = { ...currentOptions };
-
-    // 如果點擊的是原本已經選的，就取消選取 (切換)
-    if (newOptions[groupId] === optionLabel) {
-      delete newOptions[groupId];
-    } else {
-      newOptions[groupId] = optionLabel;
-    }
-
-    // 重新組合字串，放入 remark 提供給後台
-    const remarkString = Object.values(newOptions).join(', ');
-
-    onUpdateItem({
-      ...item,
-      selectedOptions: newOptions,
-      remark: remarkString
-    });
-  };
+  const totalAmount = getOrderTotal(orderItems);
 
   const handleQtyChange = (item, newQuantity) => {
     onUpdateItem({
@@ -50,8 +23,18 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
     setIsSubmitting(true);
     setErrorMsg('');
     try {
-      const apiUrl = 'https://script.google.com/macros/s/AKfycbw0PRd07CmA2X83VS9fsUp75wnVC2t9IjDICi_s3kSskE_99WDqzqLcsjDRsbidpYBBLw/exec';
-      
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbxApIzcf2wzbkAEUtYDJ2ka3c4P0wG5ZigOEVJquPIizhkuw-tRsEIZq5Kk-jV3r07Y/exec';
+
+      const formattedItems = orderItems.map(item => {
+        const itemTotal = getItemTotalPrice(item);
+        const unitPriceWithExtra = itemTotal / item.quantity;
+        return {
+          ...item,
+          price: unitPriceWithExtra, // Update unit price to include extras
+          total: itemTotal
+        };
+      });
+
       await fetch(apiUrl, {
         method: 'POST',
         mode: 'no-cors',
@@ -60,14 +43,14 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
         },
         body: JSON.stringify({
           name: userName,
-          items: orderItems,
+          items: formattedItems,
           totalAmount
         }),
       });
 
       // 使用 no-cors 會收到 opaque response，無法讀取詳細內容，
       // 只要沒有拋出 catch 錯誤，我們就視為成功。
-      navigate('/success', { state: { orderItems } });
+      navigate('/success', { state: { orderItems: formattedItems } });
     } catch (err) {
       console.error(err);
       setErrorMsg('傳送失敗，請確認 API 網址設定正確或網路連線。' + err.message);
@@ -83,110 +66,88 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
   }
 
   return (
-    <div className="checkout-container page-enter-active">
-      <header className="header">
-        <button className="back-btn" onClick={() => navigate(-1)}><ChevronLeft size={24} /></button>
-        <h1>確認訂單</h1>
+    <div className="bg-[#f8f9fa] min-h-screen pb-40 font-body">
+      {/* Header */}
+      <header className="w-full top-0 sticky z-50 bg-white border-b border-gray-100 flex items-center px-6 h-16 shadow-sm">
+        <button 
+          onClick={() => navigate('/menu')}
+          className="p-2 -ml-2 text-gray-800 active:scale-90 transition-transform"
+        >
+          <span className="material-symbols-outlined font-bold">chevron_left</span>
+        </button>
+        <h1 className="flex-1 text-center pr-8 text-[19px] font-bold text-[#1a1a1a] font-headline">確認訂單</h1>
       </header>
 
-      <div className="checkout-content">
-        <div className="user-info-card">
-          <div className="info-row">
-            <span className="info-label">訂購人</span>
-            <span className="info-value">{userName}</span>
+      <div className="max-w-[480px] mx-auto px-5 py-8 flex flex-col gap-6">
+        {/* User Info Card */}
+        <div className="bg-white rounded-[20px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-gray-50/50 flex justify-between items-center">
+          <span className="text-[#a0a0a0] font-medium">訂購人</span>
+          <div className="flex items-center gap-3">
+            <span className="text-[#1a1a1a] font-bold text-lg">{userName}</span>
+            <span className="material-symbols-outlined text-gray-300">person</span>
           </div>
         </div>
 
-        <div className="order-list-section">
-          <div className="section-title">
-            <Receipt size={20} />
-            <h2>訂單明細</h2>
-          </div>
-          <p className="section-subtitle">※無須調整為正常(加蔥、小辣)</p>
-          
-          <div className="order-items">
-            {orderItems.map((item) => {
-              // 某些餐點可能不適合顯示特定選項 (例如果汁/湯不顯示飯量)
-              // 這裡採用簡單判定：只要不是熱湯跟果醋，就可以顯示選項。
-              // 透過 item.id 判斷，sp: 湯, d: 果醋
-              const showOptions = !(item.id.startsWith('sp') || item.id.startsWith('d'));
-              
-              return (
-                <div key={`${item.id}-${item.isNoSide}`} className="order-item-card">
-                  
-                  {/* 上半部：餐點名稱與數量控制 */}
-                  <div className="item-main-header">
-                    <div className="item-title-area">
-                      <span className="name">{item.displayName}</span>
-                      <span className="item-price">${item.price * item.quantity}</span>
-                    </div>
-                    
-                    <div className="checkout-qty-control">
-                      <button 
-                        className="qty-btn small-btn remove" 
-                        onClick={() => handleQtyChange(item, item.quantity - 1)}
-                      ><Minus size={14} /></button>
-                      <span className="qty-count">{item.quantity}</span>
-                      <button 
-                        className="qty-btn small-btn add" 
-                        onClick={() => handleQtyChange(item, item.quantity + 1)}
-                      ><Plus size={14} /></button>
-                    </div>
-                  </div>
-                  
-                  {/* 下半部：客製化標籤 (僅主餐/單點顯示) */}
-                  {showOptions && (
-                    <div className="item-options-area">
-                      {optionGroups.map((group) => (
-                        <div key={group.id} className="option-group">
-                          <span className="option-label-small">{group.name}</span>
-                          <div className="option-chips">
-                            {group.options.map(opt => {
-                              const isSelected = (item.selectedOptions && item.selectedOptions[group.id] === opt);
-                              return (
-                                <button
-                                  key={opt}
-                                  className={`option-chip ${isSelected ? 'active' : ''}`}
-                                  onClick={() => handleToggleOption(item, group.id, opt)}
-                                >
-                                  {opt}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+        {/* Order Details Title */}
+        <div className="flex items-center gap-3 px-1 mt-2">
+          <span className="material-symbols-outlined text-[#d32f2f] text-[22px]">receipt_long</span>
+          <h2 className="text-[19px] font-bold text-[#d32f2f]">訂單明細</h2>
+        </div>
 
-                </div>
-              );
-            })}
-          </div>
+        {/* Order Items */}
+        <div className="flex flex-col gap-4">
+          {orderItems.map((item) => (
+            <div key={`${item.id}-${item.variantKey}`} className="bg-white rounded-[22px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-50/30 flex items-center justify-between">
+              <div className="flex flex-col gap-1">
+                <h3 className="text-[18px] font-bold text-[#1a1a1a]">{item.displayName}</h3>
+                <span className="text-[18px] font-bold text-[#d32f2f]">${getItemTotalPrice(item)}</span>
+              </div>
 
-          <div className="order-total-card">
-            <span className="total-label">總共 {orderItems.reduce((s,i) => s + i.quantity, 0)} 項商品</span>
-            <div className="total-price-wrap">
-              <span>總金額</span>
-              <span className="amount">${totalAmount}</span>
+              <div className="flex items-center bg-gray-50 rounded-full p-1.5 gap-4">
+                <button
+                  onClick={() => handleQtyChange(item, item.quantity - 1)}
+                  className="w-8 h-8 rounded-full bg-white border border-gray-200 text-[#d32f2f] flex items-center justify-center active:scale-90 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-sm font-black text-[#d32f2f]/60">remove</span>
+                </button>
+                <span className="font-bold text-[#1a1a1a] w-3 text-center">{item.quantity}</span>
+                <button
+                  onClick={() => handleQtyChange(item, item.quantity + 1)}
+                  className="w-8 h-8 rounded-full bg-[#d32f2f] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-sm font-black">add</span>
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
+
+        {/* Summary Card */}
+        <div className="bg-white rounded-[22px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-50/30 flex justify-between items-center mt-2">
+          <span className="text-gray-400 font-medium text-[15px]">
+            總共 {orderItems.reduce((s, i) => s + i.quantity, 0)} 項商品
+          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-gray-400 text-[14px]">總金額</span>
+            <span className="text-[22px] font-black text-[#d32f2f]">${totalAmount}</span>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="error-alert">
+          <div className="bg-red-50 text-[#d32f2f] p-4 rounded-2xl text-center font-bold text-sm border border-red-100">
             {errorMsg}
           </div>
         )}
       </div>
 
-      <div className="bottom-checkout-bar">
-        <button 
-          className="btn-primary submit-btn" 
+      {/* Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 w-full bg-white p-6 pb-8 border-t border-gray-100/50 flex justify-center z-[100]">
+        <button
           onClick={handleSubmit}
           disabled={isSubmitting || orderItems.length === 0}
+          className="w-full max-w-[440px] py-[18px] bg-[#d32f2f] text-white font-black text-[19px] rounded-full shadow-[0_8px_24px_rgba(211,47,47,0.3)] active:scale-[0.98] transition-all disabled:opacity-50"
         >
-          {isSubmitting ? '送出中...' : `確認送出 $${totalAmount}`}
+          {isSubmitting ? '處理中...' : `確認送出 $${totalAmount}`}
         </button>
       </div>
     </div>

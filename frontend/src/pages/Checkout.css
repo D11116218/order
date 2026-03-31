@@ -203,7 +203,7 @@
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 480px;
+  max-width: var(--app-max-width);
   background: var(--surface-color);
   padding: 16px 20px 24px;
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.08);

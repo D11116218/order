@@ -11,7 +11,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const apiUrl = 'https://script.google.com/macros/s/AKfycbw0PRd07CmA2X83VS9fsUp75wnVC2t9IjDICi_s3kSskE_99WDqzqLcsjDRsbidpYBBLw/exec';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbxApIzcf2wzbkAEUtYDJ2ka3c4P0wG5ZigOEVJquPIizhkuw-tRsEIZq5Kk-jV3r07Y/exec';
       const response = await fetch(apiUrl);
       const data = await response.json();
       setOrders(data);
@@ -54,7 +54,6 @@ const Orders = () => {
                   <Users size={16} />
                   <span className="user-name">{order.name}</span>
                 </div>
-                <span className="order-time">{order.time}</span>
               </div>
               <div className="order-item-row">
                 <div className="item-info">

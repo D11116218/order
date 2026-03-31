@@ -1,183 +1,143 @@
 .admin-container {
-    min-height: 100vh;
-    background-color: var(--surface-color);
-    display: flex;
-    flex-direction: column;
+  font-family: 'Inter', 'Noto Sans TC', sans-serif;
+  overflow-x: hidden;
 }
 
-.admin-content {
-    flex: 1;
-    padding: 20px;
-    overflow-x: auto;
+/* Login Overlay */
+.admin-login-overlay {
+  position: fixed;
+  inset: 0;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
 }
 
-.table-wrapper {
-    background: white;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    overflow-x: auto; /* Allow horizontal scrolling */
+.login-card {
+  background: white;
+  width: 100%;
+  max-width: 380px;
+  padding: 40px 32px;
+  border-radius: 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.05);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.admin-table {
-    width: 100%;
-    min-width: 600px; /* Prevent table from squeezing fields too tightly */
-    border-collapse: collapse;
-    font-size: 0.95rem;
+.login-card .icon-wrap {
+  width: 64px;
+  height: 64px;
+  background: #fff5f5;
+  color: #d32f2f;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
 }
 
-.admin-table th, .admin-table td {
-    padding: 12px 10px; /* Reduced horizontal padding slightly */
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
+.login-card h2 {
+  font-size: 24px;
+  font-weight: 900;
+  color: #1a1a1a;
 }
 
-.admin-table th {
-    background-color: #f8f9fa;
-    color: var(--text-secondary);
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    white-space: nowrap; /* Keep headers on single line */
+.login-card p {
+  color: #a0a0a0;
+  font-size: 15px;
+  margin-bottom: 8px;
 }
 
-.admin-table tr:hover {
-    background-color: #fafafa;
+.login-card input {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  border: 2px solid #f0f0f0;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  transition: all 0.3s;
 }
 
-.admin-table .editing {
-    background-color: #fff9f9;
+.login-card input:focus {
+  outline: none;
+  border-color: #d32f2f;
+  background: #fffafa;
 }
 
-.admin-table input, .admin-table select {
-    width: 100%;
-    padding: 6px 8px; /* Slightly reduced padding to save space */
-    border: 1px solid var(--primary-color);
-    border-radius: var(--radius-sm);
-    font-size: 0.95rem;
-    background-color: white;
+.login-card input.error {
+  border-color: #ff5252;
+  background: #fff5f5;
 }
 
-.admin-table .col-qty {
-    width: 70px; /* Specific width for quantity to prevent squishing */
-    text-align: center;
+.error-text {
+  color: #ff5252;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.remark-text {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    display: block;
-    max-width: 150px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.login-btn {
+  background: #d32f2f;
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 17px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(211, 47, 47, 0.2);
+  transition: all 0.2s;
+  margin-top: 8px;
 }
 
-.actions {
-    width: 110px;
+.login-btn:active {
+  transform: scale(0.98);
 }
 
-.action-btns {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
+.back-home-btn {
+  background: none;
+  border: none;
+  color: #a0a0a0;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 8px;
 }
 
-.edit-btn, .save-btn, .cancel-btn, .delete-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 6px;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Main Admin Styles */
+.header-admin {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
 }
 
-.edit-btn {
-    color: #1976d2;
-    background-color: #e3f2fd;
+.admin-main {
+  animation: slideUp 0.4s ease-out;
 }
 
-.edit-btn:hover {
-    background-color: #bbdefb;
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.delete-btn {
-    color: #d32f2f;
-    background-color: #ffebee;
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 12px;
+  padding-right: 20px !important;
 }
 
-.delete-btn:hover {
-    background-color: #ffcdd2;
+/* Row editing specific */
+input[type="number"] {
+  -moz-appearance: textfield;
 }
-
-.save-btn {
-    color: #2e7d32;
-    background-color: #e8f5e9;
-}
-
-.save-btn:hover {
-    background-color: #c8e6c9;
-}
-
-.cancel-btn {
-    color: #616161;
-    background-color: #f5f5f5;
-}
-
-.cancel-btn:hover {
-    background-color: #eeeeee;
-}
-
-.admin-actions-footer {
-    padding: 24px;
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-}
-
-.footer-btn {
-    flex: 1;
-    max-width: 200px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    border: none;
-    border-radius: var(--radius-lg);
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.excel-btn {
-    background-color: #2e7d32;
-    color: white;
-    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
-}
-
-.excel-btn:hover {
-    background-color: #26622b;
-    transform: translateY(-2px);
-}
-
-.home-btn {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
-}
-
-.home-btn:hover {
-    background-color: #b71c1c;
-    transform: translateY(-2px);
-}
-
-.admin-footer-tip {
-    padding: 0 20px 30px;
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }

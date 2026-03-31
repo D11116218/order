@@ -6,23 +6,23 @@ import Checkout from './pages/Checkout';
 import Success from './pages/Success';
 import Orders from './pages/Orders';
 import Admin from './pages/Admin';
+import RestaurantSelection from './pages/RestaurantSelection';
 
 function App() {
   const [userName, setUserName] = useState('');
   const [orderItems, setOrderItems] = useState([]);
+  const [selectedRestaurant, setSelectedRestaurant] = useState('chi-teng');
 
   const handleUpdateItem = (item) => {
     setOrderItems((prev) => {
-      const existingItemIndex = prev.findIndex(i => i.id === item.id && i.isNoSide === item.isNoSide);
+      const existingItemIndex = prev.findIndex(i => i.id === item.id && i.variantKey === item.variantKey);
       
       if (existingItemIndex >= 0) {
         if (item.quantity === 0) {
-          // Remove item
           const newItems = [...prev];
           newItems.splice(existingItemIndex, 1);
           return newItems;
         } else {
-          // Update quantity/remark
           const newItems = [...prev];
           newItems[existingItemIndex] = item;
           return newItems;
@@ -47,10 +47,20 @@ function App() {
         <Routes>
           <Route path="/" element={<Home userName={userName} setUserName={setUserName} />} />
           <Route 
+            path="/restaurants" 
+            element={
+              userName ? (
+                <RestaurantSelection setSelectedRestaurant={setSelectedRestaurant} onClearOrder={() => setOrderItems([])} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            } 
+          />
+          <Route 
             path="/menu" 
             element={
               userName ? (
-                <Menu orderItems={orderItems} onUpdateItem={handleUpdateItem} />
+                <Menu restaurantId={selectedRestaurant} orderItems={orderItems} onUpdateItem={handleUpdateItem} />
               ) : (
                 <Navigate to="/" replace />
               )
@@ -81,3 +91,4 @@ function App() {
 }
 
 export default App;
+
