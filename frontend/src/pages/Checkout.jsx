@@ -4,6 +4,12 @@ import { ChevronLeft, Receipt, CheckCircle, Plus, Minus } from 'lucide-react';
 import { getItemTotalPrice, getOrderTotal } from '../utils/price';
 import './Checkout.css';
 
+const customizationGroups = [
+  { id: 'spicy', label: '辣度', options: ['大辣', '中辣', '小辣'] },
+  { id: 'onions', label: '蔥',   options: ['蔥多', '加蔥'] },
+  { id: 'rice',  label: '飯量',  options: ['飯多+15', '飯少'] }
+];
+
 const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -12,9 +18,22 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
   const totalAmount = getOrderTotal(orderItems);
 
   const handleQtyChange = (item, newQuantity) => {
+    onUpdateItem({ ...item, quantity: newQuantity });
+  };
+
+  const handleOptionChange = (item, groupId, opt) => {
+    const prev = item.selectedOptions || {};
+    // Toggle: clicking the same option deselects it
+    const updated = { ...prev, [groupId]: prev[groupId] === opt ? null : opt };
+
+    const remarkParts = customizationGroups
+      .map(g => updated[g.id])
+      .filter(Boolean);
+
     onUpdateItem({
       ...item,
-      quantity: newQuantity
+      selectedOptions: updated,
+      remark: remarkParts.join('、')
     });
   };
 
@@ -88,26 +107,56 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
         {/* Order Items */}
         <div className="flex flex-col gap-4">
           {orderItems.map((item) => (
-            <div key={`${item.id}-${item.variantKey}`} className="bg-white rounded-[22px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-50/30 flex items-center justify-between">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-[18px] font-bold text-[#1a1a1a]">{item.displayName}</h3>
-                <span className="text-[18px] font-bold text-[#d32f2f]">${getItemTotalPrice(item)}</span>
+            <div key={`${item.id}-${item.variantKey}`} className="bg-white rounded-[22px] p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-50/30 flex flex-col gap-4">
+              {/* Item name, price & qty control */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-0.5">
+                  <h3 className="text-[17px] font-bold text-[#1a1a1a]">{item.displayName}</h3>
+                  <span className="text-[17px] font-bold text-[#d32f2f]">${getItemTotalPrice(item)}</span>
+                </div>
+
+                <div className="flex items-center bg-gray-50 rounded-full p-1.5 gap-3">
+                  <button
+                    onClick={() => handleQtyChange(item, item.quantity - 1)}
+                    className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center active:scale-90 transition-transform"
+                  >
+                    <span className="material-symbols-outlined text-sm font-black text-[#d32f2f]/60">remove</span>
+                  </button>
+                  <span className="font-bold text-[#1a1a1a] w-3 text-center">{item.quantity}</span>
+                  <button
+                    onClick={() => handleQtyChange(item, item.quantity + 1)}
+                    className="w-8 h-8 rounded-full bg-[#d32f2f] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform"
+                  >
+                    <span className="material-symbols-outlined text-sm font-black">add</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center bg-gray-50 rounded-full p-1.5 gap-4">
-                <button
-                  onClick={() => handleQtyChange(item, item.quantity - 1)}
-                  className="w-8 h-8 rounded-full bg-white border border-gray-200 text-[#d32f2f] flex items-center justify-center active:scale-90 transition-transform"
-                >
-                  <span className="material-symbols-outlined text-sm font-black text-[#d32f2f]/60">remove</span>
-                </button>
-                <span className="font-bold text-[#1a1a1a] w-3 text-center">{item.quantity}</span>
-                <button
-                  onClick={() => handleQtyChange(item, item.quantity + 1)}
-                  className="w-8 h-8 rounded-full bg-[#d32f2f] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform"
-                >
-                  <span className="material-symbols-outlined text-sm font-black">add</span>
-                </button>
+              {/* Customization Options */}
+              <div className="flex flex-col gap-3 pt-3 border-t border-gray-50">
+                {customizationGroups.map((group) => (
+                  <div key={group.id} className="flex items-center gap-3 flex-wrap">
+                    <span className="text-[12px] font-bold text-gray-400 w-8 shrink-0">{group.label}</span>
+                    <div className="flex flex-wrap gap-2">
+                      {group.options.map((opt) => {
+                        const isSelected = item.selectedOptions?.[group.id] === opt;
+                        return (
+                          <button
+                            key={opt}
+                            onClick={() => handleOptionChange(item, group.id, opt)}
+                            className={`px-3 py-1.5 rounded-full text-[13px] font-bold transition-all duration-150 ${
+                              isSelected
+                                ? 'bg-[#d32f2f] text-white shadow-md shadow-red-100 scale-105'
+                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200 active:scale-95'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
