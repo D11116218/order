@@ -5,9 +5,7 @@ import { getItemTotalPrice, getOrderTotal } from '../utils/price';
 import './Checkout.css';
 
 const customizationGroups = [
-  { id: 'spicy', label: '辣度', options: ['大辣', '中辣', '小辣'] },
-  { id: 'onions', label: '蔥',   options: ['蔥多', '加蔥', '不加蔥'] },
-  { id: 'rice',  label: '飯量',  options: ['飯多+15', '飯少'] }
+  { id: 'egg', label: '加點', options: ['糖心蛋(半顆)+10'] }
 ];
 
 const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
@@ -133,31 +131,33 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
               </div>
 
               {/* Customization Options */}
-              <div className="flex flex-col gap-3 pt-3 border-t border-gray-50">
-                {customizationGroups.map((group) => (
-                  <div key={group.id} className="flex items-center gap-3 flex-wrap">
-                    <span className="text-[12px] font-bold text-gray-400 w-8 shrink-0">{group.label}</span>
-                    <div className="flex flex-wrap gap-2">
-                      {group.options.map((opt) => {
-                        const isSelected = item.selectedOptions?.[group.id] === opt;
-                        return (
-                          <button
-                            key={opt}
-                            onClick={() => handleOptionChange(item, group.id, opt)}
-                            className={`px-3 py-1.5 rounded-full text-[13px] font-bold transition-all duration-150 ${
-                              isSelected
-                                ? 'bg-[#d32f2f] text-white shadow-md shadow-red-100 scale-105'
-                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200 active:scale-95'
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        );
-                      })}
+              {item.category !== 'sides' && (
+                <div className="flex flex-col gap-3 pt-3 border-t border-gray-50">
+                  {customizationGroups.map((group) => (
+                    <div key={group.id} className="flex items-center gap-3 flex-wrap">
+                      <span className="text-[12px] font-bold text-gray-400 w-8 shrink-0">{group.label}</span>
+                      <div className="flex flex-wrap gap-2">
+                        {group.options.map((opt) => {
+                          const isSelected = item.selectedOptions?.[group.id] === opt;
+                          return (
+                            <button
+                              key={opt}
+                              onClick={() => handleOptionChange(item, group.id, opt)}
+                              className={`px-3 py-1.5 rounded-full text-[13px] font-bold transition-all duration-150 ${
+                                isSelected
+                                  ? 'bg-[#d32f2f] text-white shadow-md shadow-red-100 scale-105'
+                                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200 active:scale-95'
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

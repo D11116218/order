@@ -12,12 +12,12 @@ export const getItemTotalPrice = (item) => {
   
   // Customization rules
   // Check both selectedOptions (object) and remark (string) as fallback
-  const isExtraRice = 
-    (item.selectedOptions && item.selectedOptions.rice === '飯多+15') ||
-    (item.remark && item.remark.includes('飯多+15'));
-    
-  if (isExtraRice) {
-    extra = 15;
+  const isAddEgg = 
+    (item.selectedOptions && item.selectedOptions.egg === '糖心蛋(半顆)+10') ||
+    (item.remark && item.remark.includes('糖心蛋(半顆)+10'));
+
+  if (isAddEgg) {
+    extra += 10;
   }
   
   return (basePrice + extra) * quantity;

@@ -20,9 +20,9 @@ const Admin = () => {
     const allMenuItems = [];
     Object.keys(chiTengMenu.items).forEach(catId => {
         chiTengMenu.items[catId].forEach(item => {
-            allMenuItems.push({ name: item.name, price: item.price });
+            allMenuItems.push({ name: item.name, price: item.price, categoryId: catId });
             if (item.altPrice) {
-                allMenuItems.push({ name: `${item.name}(${item.altLabel})`, price: item.altPrice });
+                allMenuItems.push({ name: `${item.name}(${item.altLabel})`, price: item.altPrice, categoryId: catId });
             }
         });
     });
@@ -75,16 +75,21 @@ const Admin = () => {
         setEditData({});
     };
 
-    const getPriceByName = (name) => {
-        const item = allMenuItems.find(i => i.name === name);
-        return item ? item.price : 0;
+    const getPriceWithCustomization = (itemName, remark) => {
+        const item = allMenuItems.find(i => i.name === itemName);
+        if (!item) return 0;
+        let p = item.price;
+        if (remark && remark.includes('糖心蛋(半顆)+10')) {
+            p += 10;
+        }
+        return p;
     };
 
     const handleSaveRow = async (idx) => {
         setSaving(true);
         try {
-            const basePrice = getPriceByName(editData.item);
-            const updatedTotal = basePrice * editData.quantity;
+            const unitPrice = getPriceWithCustomization(editData.item, editData.remark);
+            const updatedTotal = unitPrice * editData.quantity;
             const finalEditData = { ...editData, total: updatedTotal };
 
             const apiUrl = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbxApIzcf2wzbkAEUtYDJ2ka3c4P0wG5ZigOEVJquPIizhkuw-tRsEIZq5Kk-jV3r07Y/exec';
@@ -258,10 +263,29 @@ const Admin = () => {
                                         )}
                                     </div>
 
+                                    {(editIdx === idx || (order.remark && order.remark.includes('糖心蛋'))) && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-400 font-medium">加點</span>
+                                            {editIdx === idx ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[13px] text-gray-500">糖心蛋(半顆)+10</span>
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="w-5 h-5 accent-[#d32f2f]"
+                                                        checked={editData.remark && editData.remark.includes('糖心蛋(半顆)+10')} 
+                                                        onChange={(e) => setEditData({...editData, remark: e.target.checked ? '糖心蛋(半顆)+10' : ''})}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <span className="font-bold text-[#d32f2f]">{order.remark || '無'}</span>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div className="flex justify-between items-center pt-2 border-t border-gray-50 mt-1">
                                         <span className="text-gray-400 font-medium">總額</span>
                                         <span className="text-[20px] font-black text-[#d32f2f]">
-                                            ${editIdx === idx ? getPriceByName(editData.item) * editData.quantity : order.total}
+                                            ${editIdx === idx ? getPriceWithCustomization(editData.item, editData.remark) * editData.quantity : order.total}
                                         </span>
                                     </div>
                                 </div>

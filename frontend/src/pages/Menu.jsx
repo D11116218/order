@@ -97,9 +97,9 @@ const Menu = ({ restaurantId = 'chicken-honke', orderItems, onUpdateItem }) => {
         {/* Menu Items List */}
         <div className="flex flex-col gap-3">
           {currentItems.flatMap(item => {
-            const rowData = [{ ...item, displayName: item.name, price: item.price, variantKey: 'base' }];
+            const rowData = [{ ...item, displayName: item.name, price: item.price, variantKey: 'base', category: activeCategory }];
             if (item.altPrice) {
-              rowData.push({ ...item, displayName: `${item.name}(${item.altLabel})`, price: item.altPrice, variantKey: 'alt' });
+              rowData.push({ ...item, displayName: `${item.name}(${item.altLabel})`, price: item.altPrice, variantKey: 'alt', category: activeCategory });
             }
             return rowData;
           }).map((displayItem, idx) => (
