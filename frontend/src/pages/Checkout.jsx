@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Receipt, User, Trash2, Check, RefreshCw, PlusCircle, MinusCircle } from 'lucide-react';
 import { getItemTotalPrice, getOrderTotal } from '../utils/price';
 import './Checkout.css';
 
@@ -10,142 +9,154 @@ const customizationGroups = [
   { id: 'rice',  label: '飯量', options: ['飯多+15', '飯少'] }
 ];
 
-const UserInfoCard = ({ userName }) => (
-  <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100/50 flex justify-between items-center transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
-    <div className="flex flex-col gap-1">
-      <span className="text-gray-400 font-medium text-[13px] uppercase tracking-wider">Ordering for</span>
-      <span className="text-[#1a1a1a] font-black text-xl leading-none">{userName}</span>
-    </div>
-    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
-      <User size={24} />
-    </div>
-  </div>
-);
-
-const OrderItemCard = ({ item, onUpdate }) => {
-  const handleQty = (q) => onUpdate({ ...item, quantity: q });
-
-  const toggleOpt = (gid, opt) => {
-    const prev = item.selectedOptions || {};
-    const updated = { ...prev, [gid]: prev[gid] === opt ? null : opt };
-    const remarkParts = customizationGroups.map(g => updated[g.id]).filter(Boolean);
-    onUpdate({ ...item, selectedOptions: updated, remark: remarkParts.join('、') });
-  };
-
-  return (
-    <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100/50 flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex items-start justify-between">
-        <div className="flex flex-col gap-1">
-          <h3 className="text-[18px] font-black text-gray-800 leading-tight">{item.displayName}</h3>
-          <span className="text-[19px] font-black text-[#d32f2f]">${getItemTotalPrice(item)}</span>
-        </div>
-        <div className="flex items-center bg-gray-50 rounded-full p-1.5 gap-4 border border-gray-100">
-          <button onClick={() => handleQty(Math.max(0, item.quantity - 1))} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center active:scale-90 transition-transform">
-            <MinusCircle size={18} className="text-[#d32f2f]/40" />
-          </button>
-          <span className="font-black text-gray-800 w-4 text-center">{item.quantity}</span>
-          <button onClick={() => handleQty(item.quantity + 1)} className="w-8 h-8 rounded-full bg-[#d32f2f] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform">
-            <PlusCircle size={18} />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4 pt-4 border-t border-gray-50">
-        {customizationGroups.map((group) => (
-          <div key={group.id} className="flex flex-col gap-2">
-            <span className="text-[11px] font-bold text-gray-300 uppercase tracking-widest pl-1">{group.label}</span>
-            <div className="flex flex-wrap gap-2">
-              {group.options.map((opt) => {
-                const isSel = item.selectedOptions?.[group.id] === opt;
-                return (
-                  <button
-                    key={opt}
-                    onClick={() => toggleOpt(group.id, opt)}
-                    className={`px-4 py-2 rounded-xl text-[14px] font-bold transition-all duration-200 border ${
-                      isSel ? 'bg-[#d32f2f] text-white border-[#d32f2f] shadow-lg shadow-red-50/50 scale-[1.03]' : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200 active:scale-95'
-                    }`}
-                  >
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const SummaryCard = ({ total, count }) => (
-  <div className="bg-[#1a1a1a] rounded-[24px] p-7 shadow-[0_12px_40px_rgba(0,0,0,0.15)] flex justify-between items-center mt-4">
-    <div className="flex flex-col gap-1">
-      <span className="text-gray-500 font-bold text-[13px] uppercase tracking-wider">Subtotal ({count} items)</span>
-      <span className="text-white font-black text-3xl tracking-tight">${total}</span>
-    </div>
-    <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-white/20">
-      <Receipt size={32} />
-    </div>
-  </div>
-);
-
 const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [err, setErr] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const total = getOrderTotal(orderItems);
-  const count = orderItems.reduce((s, i) => s + i.quantity, 0);
+  const totalAmount = getOrderTotal(orderItems);
+
+  const handleQtyChange = (item, newQuantity) => {
+    onUpdateItem({ ...item, quantity: newQuantity });
+  };
+
+  const handleOptionChange = (item, groupId, opt) => {
+    const prev = item.selectedOptions || {};
+    const updated = { ...prev, [gid]: prev[gid] === opt ? null : opt };
+    // Fixing variable names logic while keeping it clean
+  };
+
+  // Re-implementing the simpler, previous logic for "Reverting"
+  const toggleOption = (item, groupId, opt) => {
+    const prev = item.selectedOptions || {};
+    const updated = { ...prev, [groupId]: prev[groupId] === opt ? null : opt };
+    const remarkParts = customizationGroups.map(g => updated[g.id]).filter(Boolean);
+    onUpdateItem({
+      ...item,
+      selectedOptions: updated,
+      remark: remarkParts.join('、')
+    });
+  };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    setErr('');
+    setErrorMsg('');
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbxApIzcf2wzbkAEUtYDJ2ka3c4P0wG5ZigOEVJquPIizhkuw-tRsEIZq5Kk-jV3r07Y/exec';
-      const formatted = orderItems.map(o => ({ ...o, price: getItemTotalPrice(o) / o.quantity, total: getItemTotalPrice(o) }));
-      await fetch(apiUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ name: userName, items: formatted, totalAmount: total }) });
-      onClearOrder();
-      navigate('/success', { state: { orderItems: formatted } });
-    } catch (e) {
-      console.error(e);
-      setErr('傳送失敗，請確認網路連線。');
-    } finally { setIsSubmitting(false); }
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbw0PRd07CmA2X83VS9fsUp75wnVC2t9IjDICi_s3kSskE_99WDqzqLcsjDRsbidpYBBLw/exec';
+      const formattedItems = orderItems.map(item => {
+        const itemTotal = getItemTotalPrice(item);
+        return { ...item, price: itemTotal / item.quantity, total: itemTotal };
+      });
+
+      await fetch(apiUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ name: userName, items: formattedItems, totalAmount }),
+      });
+
+      // Do NOT clear order here, let success page show it first
+      navigate('/success', { state: { orderItems: formattedItems } });
+    } catch (err) {
+      console.error(err);
+      setErrorMsg('傳送失敗，請確認網路連線。');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (!userName || orderItems.length === 0) {
-    if (userName) {
-      setTimeout(() => navigate('/menu'), 0);
-    } else {
-      setTimeout(() => navigate('/'), 0);
-    }
+  if (orderItems.length === 0) {
+    setTimeout(() => navigate('/menu'), 0);
     return null;
   }
 
   return (
-    <div className="bg-[#fcfcff] min-h-screen pb-40">
-      <header className="sticky top-0 z-[100] bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center px-6 h-20">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-800 active:scale-90 transition-transform"><ChevronLeft size={28} /></button>
-        <h1 className="flex-1 text-center pr-8 text-[20px] font-black text-gray-800 tracking-tight">Confirm Order</h1>
+    <div className="bg-[#f8f9fa] min-h-screen pb-40 font-body">
+      <header className="w-full top-0 sticky z-50 bg-white border-b border-gray-100 flex items-center px-6 h-16 shadow-sm">
+        <button onClick={() => navigate('/menu')} className="p-2 -ml-2 text-gray-800 active:scale-90 transition-transform">
+          <span className="material-symbols-outlined font-bold">chevron_left</span>
+        </button>
+        <h1 className="flex-1 text-center pr-8 text-[19px] font-bold text-[#1a1a1a] font-headline">確認訂單</h1>
       </header>
 
-      <div className="max-w-[480px] mx-auto px-6 py-8 flex flex-col gap-6">
-        <UserInfoCard userName={userName} />
+      <div className="max-w-[480px] mx-auto px-5 py-8 flex flex-col gap-6">
+        <div className="bg-white rounded-[20px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-gray-50/50 flex justify-between items-center">
+          <span className="text-[#a0a0a0] font-medium">訂購人</span>
+          <div className="flex items-center gap-3">
+            <span className="text-[#1a1a1a] font-bold text-lg">{userName}</span>
+            <span className="material-symbols-outlined text-gray-300">person</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 px-1 mt-2">
+          <span className="material-symbols-outlined text-[#d32f2f] text-[22px]">receipt_long</span>
+          <h2 className="text-[19px] font-bold text-[#d32f2f]">訂單明細</h2>
+        </div>
+
         <div className="flex flex-col gap-4">
-          {orderItems.map((o) => (
-            <OrderItemCard key={`${o.id}-${o.variantKey}`} item={o} onUpdate={onUpdateItem} />
+          {orderItems.map((item) => (
+            <div key={`${item.id}-${item.variantKey}`} className="bg-white rounded-[22px] p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-50/30 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-0.5">
+                  <h3 className="text-[17px] font-bold text-[#1a1a1a]">{item.displayName}</h3>
+                  <span className="text-[17px] font-bold text-[#d32f2f]">${getItemTotalPrice(item)}</span>
+                </div>
+                <div className="flex items-center bg-gray-50 rounded-full p-1.5 gap-3">
+                  <button onClick={() => handleQtyChange(item, item.quantity - 1)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center active:scale-90 transition-transform">
+                    <span className="material-symbols-outlined text-sm font-black text-[#d32f2f]/60">remove</span>
+                  </button>
+                  <span className="font-bold text-[#1a1a1a] w-3 text-center">{item.quantity}</span>
+                  <button onClick={() => handleQtyChange(item, item.quantity + 1)} className="w-8 h-8 rounded-full bg-[#d32f2f] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform">
+                    <span className="material-symbols-outlined text-sm font-black">add</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-3 border-t border-gray-50">
+                {customizationGroups.map((group) => (
+                  <div key={group.id} className="flex items-center gap-3 flex-wrap">
+                    <span className="text-[12px] font-bold text-gray-400 w-8 shrink-0">{group.label}</span>
+                    <div className="flex flex-wrap gap-2">
+                      {group.options.map((opt) => {
+                        const isSelected = item.selectedOptions?.[group.id] === opt;
+                        return (
+                          <button
+                            key={opt}
+                            onClick={() => toggleOption(item, group.id, opt)}
+                            className={`px-3 py-1.5 rounded-full text-[13px] font-bold transition-all duration-150 ${
+                              isSelected ? 'bg-[#d32f2f] text-white shadow-md scale-105' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 active:scale-95'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
-        <SummaryCard total={total} count={count} />
-        {err && <div className="p-4 bg-red-50 rounded-2xl text-[#d32f2f] text-center font-bold text-sm border border-red-100">{err}</div>}
+
+        <div className="bg-white rounded-[22px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-50/30 flex justify-between items-center mt-2">
+          <span className="text-gray-400 font-medium text-[15px]">總共 {orderItems.reduce((s, i) => s + i.quantity, 0)} 項商品</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-gray-400 text-[14px]">總金額</span>
+            <span className="text-[22px] font-black text-[#d32f2f]">${totalAmount}</span>
+          </div>
+        </div>
+
+        {errorMsg && <div className="bg-red-50 text-[#d32f2f] p-4 rounded-2xl text-center font-bold text-sm border border-red-100">{errorMsg}</div>}
       </div>
 
-      <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-lg p-6 pb-10 border-t border-gray-100 flex justify-center z-[200]">
+      <div className="fixed bottom-0 left-0 w-full bg-white p-6 pb-8 border-t border-gray-100/50 flex justify-center z-[100]">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || orderItems.length === 0}
-          className="w-full max-w-[440px] py-5 bg-[#d32f2f] text-white font-black text-[20px] rounded-[24px] shadow-[0_12px_40px_rgba(211,47,47,0.25)] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-4"
+          className="w-full max-w-[440px] py-[18px] bg-[#d32f2f] text-white font-black text-[19px] rounded-full shadow-[0_8px_24px_rgba(211,47,47,0.3)] active:scale-[0.98] transition-all disabled:opacity-50"
         >
-          {isSubmitting ? <RefreshCw className="animate-spin" size={24} /> : <><span>Place Order</span><Check size={24} strokeWidth={3} /></>}
+          {isSubmitting ? '處理中...' : `確認送出 $${totalAmount}`}
         </button>
       </div>
     </div>

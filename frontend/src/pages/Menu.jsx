@@ -63,7 +63,7 @@ const Menu = ({ restaurantId = 'chicken-honke', orderItems, onUpdateItem }) => {
     <div className="bg-[#f8f9fa] min-h-screen font-body pb-32">
       {/* Header */}
       <header className="bg-white border-b border-gray-100 flex items-center px-6 h-[72px] sticky top-0 z-50">
-        <button onClick={() => navigate(-1)} className="mr-4 text-gray-900 active:scale-90 transition-transform">
+        <button onClick={() => navigate('/')} className="mr-4 text-gray-900 active:scale-90 transition-transform">
           <span className="material-symbols-outlined font-bold">chevron_left</span>
         </button>
         <h1 className="text-xl font-bold text-gray-900">產品訂購</h1>

@@ -36,7 +36,11 @@ function App() {
     });
   };
 
-  const clearOrder = () => {
+  const clearCart = () => {
+    setOrderItems([]);
+  };
+
+  const clearAll = () => {
     setOrderItems([]);
     setUserName('');
   };
@@ -50,7 +54,7 @@ function App() {
             path="/restaurants" 
             element={
               userName ? (
-                <RestaurantSelection setSelectedRestaurant={setSelectedRestaurant} onClearOrder={() => setOrderItems([])} />
+                <RestaurantSelection setSelectedRestaurant={setSelectedRestaurant} onClearOrder={clearCart} />
               ) : (
                 <Navigate to="/" replace />
               )
@@ -74,14 +78,14 @@ function App() {
                   userName={userName} 
                   orderItems={orderItems} 
                   onUpdateItem={handleUpdateItem}
-                  onClearOrder={clearOrder}
+                  onClearOrder={clearCart}
                 />
               ) : (
                 <Navigate to="/menu" replace />
               )
             } 
           />
-          <Route path="/success" element={<Success onClearOrder={clearOrder} />} />
+          <Route path="/success" element={<Success onClearOrder={clearCart} />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
