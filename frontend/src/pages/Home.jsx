@@ -32,9 +32,6 @@ const Home = ({ userName, setUserName }) => {
         <h1 className="text-4xl font-extrabold text-[#1d1d1f] tracking-[2px] mb-2 font-headline">
           雞肉本家
         </h1>
-        <p className="text-[#86868b] text-lg mb-12 font-body">
-          炭火熟成 ‧ 職人手作
-        </p>
 
         {/* Name Form */}
         <form onSubmit={handleStart} className="flex flex-col gap-6">
