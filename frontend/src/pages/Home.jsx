@@ -24,16 +24,16 @@ const Home = ({ userName, setUserName }) => {
         {/* Brand Logo */}
         <div className="w-24 h-24 bg-[#d32f2f] text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_12px_24px_rgba(211,47,47,0.3)]">
           <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-            restaurant
+            skillet
           </span>
         </div>
 
         {/* Brand Title */}
         <h1 className="text-4xl font-extrabold text-[#1d1d1f] tracking-[2px] mb-2 font-headline">
-          熾騰
+          雞肉本家
         </h1>
         <p className="text-[#86868b] text-lg mb-12 font-body">
-          極品和牛 ‧ 火焰料理藝術
+          炭火熟成 ‧ 職人手作
         </p>
 
         {/* Name Form */}

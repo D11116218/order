@@ -1,58 +1,68 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, Receipt, User, Trash2, Check, RefreshCw, PlusCircle, MinusCircle } from 'lucide-react';
+import { getItemTotalPrice, getOrderTotal } from '../utils/price';
+import './Checkout.css';
+
+const customizationGroups = [
+  { id: 'spicy', label: '辣度', options: ['大辣', '中辣', '小辣'] },
+  { id: 'onions', label: '蔥量', options: ['蔥多', '加蔥', '不加蔥'] },
+  { id: 'rice',  label: '飯量', options: ['飯多+15', '飯少'] }
+];
+
 const UserInfoCard = ({ userName }) => (
-  <div className="bg-white rounded-[20px] p-6 shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-gray-50/50 flex justify-between items-center transition-all hover:shadow-[0_6px_16px_rgba(0,0,0,0.05)]">
-    <span className="text-[#a0a0a0] font-medium font-body">訂購人</span>
-    <div className="flex items-center gap-3">
-      <span className="text-[#1a1a1a] font-bold text-lg font-headline">{userName}</span>
-      <span className="material-symbols-outlined text-gray-300">person</span>
+  <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100/50 flex justify-between items-center transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
+    <div className="flex flex-col gap-1">
+      <span className="text-gray-400 font-medium text-[13px] uppercase tracking-wider">Ordering for</span>
+      <span className="text-[#1a1a1a] font-black text-xl leading-none">{userName}</span>
+    </div>
+    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
+      <User size={24} />
     </div>
   </div>
 );
 
-const OrderItemCard = ({ item, onUpdate, customizationGroups }) => {
-  const handleQtyChange = (newQty) => onUpdate({ ...item, quantity: newQty });
+const OrderItemCard = ({ item, onUpdate }) => {
+  const handleQty = (q) => onUpdate({ ...item, quantity: q });
 
-  const toggleOption = (groupId, opt) => {
+  const toggleOpt = (gid, opt) => {
     const prev = item.selectedOptions || {};
-    const updated = { ...prev, [groupId]: prev[groupId] === opt ? null : opt };
+    const updated = { ...prev, [gid]: prev[gid] === opt ? null : opt };
     const remarkParts = customizationGroups.map(g => updated[g.id]).filter(Boolean);
-    
-    onUpdate({
-      ...item,
-      selectedOptions: updated,
-      remark: remarkParts.join('、')
-    });
+    onUpdate({ ...item, selectedOptions: updated, remark: remarkParts.join('、') });
   };
 
   return (
-    <div className="bg-white rounded-[22px] p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-50/30 flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-0.5">
-          <h3 className="text-[17px] font-bold text-[#1a1a1a] font-headline">{item.displayName}</h3>
-          <span className="text-[17px] font-bold text-[#d32f2f] font-body">${getItemTotalPrice(item)}</span>
+    <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100/50 flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-[18px] font-black text-gray-800 leading-tight">{item.displayName}</h3>
+          <span className="text-[19px] font-black text-[#d32f2f]">${getItemTotalPrice(item)}</span>
         </div>
-        <div className="flex items-center bg-gray-50 rounded-full p-1.5 gap-3 border border-gray-100">
-          <button onClick={() => handleQtyChange(item.quantity - 1)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center active:scale-90 transition-transform">
-            <Plus className="rotate-45 text-[#d32f2f]/60" size={14} />
+        <div className="flex items-center bg-gray-50 rounded-full p-1.5 gap-4 border border-gray-100">
+          <button onClick={() => handleQty(Math.max(0, item.quantity - 1))} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center active:scale-90 transition-transform">
+            <MinusCircle size={18} className="text-[#d32f2f]/40" />
           </button>
-          <span className="font-bold text-[#1a1a1a] w-3 text-center">{item.quantity}</span>
-          <button onClick={() => handleQtyChange(item.quantity + 1)} className="w-8 h-8 rounded-full bg-[#d32f2f] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform">
-            <Plus size={14} />
+          <span className="font-black text-gray-800 w-4 text-center">{item.quantity}</span>
+          <button onClick={() => handleQty(item.quantity + 1)} className="w-8 h-8 rounded-full bg-[#d32f2f] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform">
+            <PlusCircle size={18} />
           </button>
         </div>
       </div>
-      <div className="flex flex-col gap-3 pt-3 border-t border-gray-50">
+
+      <div className="flex flex-col gap-4 pt-4 border-t border-gray-50">
         {customizationGroups.map((group) => (
-          <div key={group.id} className="flex items-center gap-3 flex-wrap">
-            <span className="text-[12px] font-bold text-gray-400 w-8 shrink-0">{group.label}</span>
+          <div key={group.id} className="flex flex-col gap-2">
+            <span className="text-[11px] font-bold text-gray-300 uppercase tracking-widest pl-1">{group.label}</span>
             <div className="flex flex-wrap gap-2">
               {group.options.map((opt) => {
-                const isSelected = item.selectedOptions?.[group.id] === opt;
+                const isSel = item.selectedOptions?.[group.id] === opt;
                 return (
                   <button
                     key={opt}
-                    onClick={() => toggleOption(group.id, opt)}
-                    className={`px-3 py-1.5 rounded-full text-[13px] font-bold transition-all duration-200 ${
-                      isSelected ? 'bg-[#d32f2f] text-white shadow-md scale-105' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 active:scale-95'
+                    onClick={() => toggleOpt(group.id, opt)}
+                    className={`px-4 py-2 rounded-xl text-[14px] font-bold transition-all duration-200 border ${
+                      isSel ? 'bg-[#d32f2f] text-white border-[#d32f2f] shadow-lg shadow-red-50/50 scale-[1.03]' : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200 active:scale-95'
                     }`}
                   >
                     {opt}
@@ -102,7 +112,14 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
     } finally { setIsSubmitting(false); }
   };
 
-  if (!userName || orderItems.length === 0) { setTimeout(() => navigate('/menu'), 0); return null; }
+  if (!userName || orderItems.length === 0) {
+    if (userName) {
+      setTimeout(() => navigate('/menu'), 0);
+    } else {
+      setTimeout(() => navigate('/'), 0);
+    }
+    return null;
+  }
 
   return (
     <div className="bg-[#fcfcff] min-h-screen pb-40">

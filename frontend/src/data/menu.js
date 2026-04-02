@@ -1,6 +1,6 @@
 export const restaurantMenus = {
   'chi-teng': {
-    name: '熾騰',
+    name: '雞肉本家',
     categories: [
       { id: 'popular', label: '熱門排行' },
       { id: 'main', label: '主餐系列' },
