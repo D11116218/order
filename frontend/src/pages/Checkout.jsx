@@ -56,7 +56,8 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
       });
 
 
-      console.log('Order submitted successfully, navigating to success page...');
+      console.log('✅ Order submitted to GAS successfully');
+      // Using replace to ensure user can't go back to a stale checkout state
       navigate('/success', { state: { orderItems: formattedItems }, replace: true });
     } catch (err) {
       console.error(err);
@@ -153,7 +154,11 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
 
       <div className="fixed bottom-0 left-0 w-full bg-white p-6 pb-8 border-t border-gray-100/50 flex justify-center z-[100]">
         <button
-          onClick={handleSubmit}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
           disabled={isSubmitting || orderItems.length === 0}
           className="w-full max-w-[440px] py-[18px] bg-[#d32f2f] text-white font-black text-[19px] rounded-full shadow-[0_8px_24px_rgba(211,47,47,0.3)] active:scale-[0.98] transition-all disabled:opacity-50"
         >
