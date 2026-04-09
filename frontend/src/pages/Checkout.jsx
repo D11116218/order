@@ -48,12 +48,17 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
         return { ...item, price: itemTotal / item.quantity, total: itemTotal };
       });
 
-      await fetch(apiUrl, {
+      // We fire and move on to the success page immediately to avoid being affected by any potential 302 redirects from GAS
+      fetch(apiUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ name: userName, items: formattedItems, totalAmount }),
-      });
+      }).catch(err => console.error('Background send failed:', err));
+
+      console.log('✅ Order sent to background, navigating...');
+      navigate('/success', { state: { orderItems: formattedItems }, replace: true });
+      return; 
 
 
       console.log('✅ Order submitted to GAS successfully');
@@ -67,8 +72,9 @@ const Checkout = ({ userName, orderItems, onUpdateItem, onClearOrder }) => {
     }
   };
 
-  if (orderItems.length === 0) {
-    setTimeout(() => navigate('/menu'), 0);
+  // Only redirect if we are not currently in the middle of submitting
+  if (orderItems.length === 0 && !isSubmitting) {
+    navigate('/menu');
     return null;
   }
 
