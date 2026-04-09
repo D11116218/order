@@ -84,7 +84,9 @@ const Admin = () => {
         setSaving(true);
         try {
             const basePrice = getPriceByName(editData.item);
-            const updatedTotal = basePrice * editData.quantity;
+            const isExtraRice = (editData.remark || '').includes('飯多+15');
+            const updatedTotal = (basePrice + (isExtraRice ? 15 : 0)) * editData.quantity;
+            
             const finalEditData = { ...editData, total: updatedTotal };
 
             const apiUrl = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbxApIzcf2wzbkAEUtYDJ2ka3c4P0wG5ZigOEVJquPIizhkuw-tRsEIZq5Kk-jV3r07Y/exec';
@@ -258,24 +260,47 @@ const Admin = () => {
                                         )}
                                     </div>
 
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-400 font-medium">備註</span>
-                                        {editIdx === idx ? (
-                                            <input 
-                                                className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-bold text-right max-w-[200px]"
-                                                value={editData.remark || ''} 
-                                                onChange={(e) => setEditData({...editData, remark: e.target.value})}
-                                                placeholder="無備註"
-                                            />
-                                        ) : (
-                                            <span className="font-bold text-gray-400 italic text-[13px]">{order.remark || '無'}</span>
-                                        )}
+                                    <div className="flex flex-col gap-2 pt-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-400 font-medium">備註</span>
+                                            {editIdx === idx ? (
+                                                <div className="flex items-center gap-2">
+                                                    <label className="flex items-center gap-1.5 cursor-pointer bg-red-50 px-2 py-1 rounded-md border border-red-100">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            className="w-4 h-4 accent-[#d32f2f]"
+                                                            checked={(editData.remark || '').includes('飯多+15')}
+                                                            onChange={(e) => {
+                                                                let r = editData.remark || '';
+                                                                if (e.target.checked) {
+                                                                    if (!r.includes('飯多+15')) r = r ? `${r}、飯多+15` : '飯多+15';
+                                                                } else {
+                                                                    r = r.split('、').filter(s => s !== '飯多+15').join('、');
+                                                                }
+                                                                setEditData({...editData, remark: r});
+                                                            }}
+                                                        />
+                                                        <span className="text-[12px] font-bold text-[#d32f2f]">飯多+15</span>
+                                                    </label>
+                                                    <input 
+                                                        className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-bold text-right max-w-[130px]"
+                                                        value={editData.remark || ''} 
+                                                        onChange={(e) => setEditData({...editData, remark: e.target.value})}
+                                                        placeholder="其他備註"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <span className="font-bold text-gray-400 italic text-[13px]">{order.remark || '無'}</span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="flex justify-between items-center pt-2 border-t border-gray-50 mt-1">
                                         <span className="text-gray-400 font-medium">總額</span>
                                         <span className="text-[20px] font-black text-[#d32f2f]">
-                                            ${editIdx === idx ? getPriceByName(editData.item) * editData.quantity : order.total}
+                                            ${editIdx === idx 
+                                                ? (getPriceByName(editData.item) + ((editData.remark || '').includes('飯多+15') ? 15 : 0)) * editData.quantity 
+                                                : order.total}
                                         </span>
                                     </div>
                                 </div>
